@@ -1,0 +1,6 @@
+streamlit>=1.35.0
+rdkit>=2023.9.1
+requests>=2.31.0
+google-genai>=0.1.0
+py3Dmol>=2.1.0
+pandas>=2.0.0
