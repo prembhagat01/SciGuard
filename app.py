@@ -4,6 +4,8 @@ Open Scientific Intelligence Hackathon 2026 | IIT Delhi & Global
 """
 
 import json
+import io
+import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 from verifier import SciVerifier
@@ -164,8 +166,9 @@ with st.sidebar:
 st.markdown('<div class="hero-title">SciGuard: Scientific Truth & Safety Firewall</div>', unsafe_allow_html=True)
 st.markdown('<div class="hero-subtitle">Autonomous Verification, Hallucination Detection & Hazard Auditing for Physical Sciences AI</div>', unsafe_allow_html=True)
 
-tab_audit, tab_benchmark, tab_architecture = st.tabs([
+tab_audit, tab_batch, tab_benchmark, tab_architecture = st.tabs([
     "🔍 Real-Time Scientific Audit",
+    "📂 Batch Dataset Auditor",
     "📊 Hallucination Benchmark",
     "⚙️ System Architecture"
 ])
@@ -346,7 +349,86 @@ with tab_audit:
             mime="application/json"
         )
 
-# ----------------- TAB 2: BENCHMARK -----------------
+# ----------------- TAB 2: BATCH AUDITOR -----------------
+with tab_batch:
+    st.markdown("### 📂 Batch Scientific Dataset Auditor")
+    st.markdown("Evaluate entire CSV datasets of scientific claims, molecular candidates, or LLM-generated reactions in seconds.")
+
+    b_col1, b_col2 = st.columns([2, 1])
+    with b_col1:
+        uploaded_file = st.file_uploader(
+            "Upload Scientific Claims CSV (Must have 'smiles' or 'claim' column):",
+            type=["csv"]
+        )
+    with b_col2:
+        st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+        run_default_btn = st.button("⚡ Run Built-in 12-Sample Benchmark", use_container_width=True, type="primary")
+
+    batch_df = None
+    if uploaded_file is not None:
+        try:
+            batch_df = pd.read_csv(uploaded_file)
+            st.success(f"Loaded {len(batch_df)} claims from uploaded CSV.")
+        except Exception as e:
+            st.error(f"Error reading CSV: {e}")
+    elif run_default_btn or st.session_state.get("batch_results") is not None:
+        try:
+            batch_df = pd.read_csv("benchmark_samples.csv")
+        except Exception:
+            batch_df = None
+
+    if batch_df is not None:
+        if run_default_btn or uploaded_file is not None:
+            with st.spinner("Processing batch audit across RDKit, PubChem & GHS safety engines..."):
+                items = batch_df.to_dict(orient="records")
+                results = st.session_state.verifier.audit_batch(items)
+                st.session_state.batch_results = results
+
+    if st.session_state.get("batch_results"):
+        results = st.session_state.batch_results
+        res_df = pd.DataFrame(results)
+
+        # Compute summary metrics
+        total = len(res_df)
+        clean_count = len(res_df[res_df["Status"] == "Verified Clean"])
+        clean_pct = round((clean_count / total) * 100, 1) if total > 0 else 0
+        phys_violations = len(res_df[res_df["Status"] == "Valency / Physics Violation"])
+        fab_entities = len(res_df[res_df["Status"] == "Fabricated Compound (Not in PubChem)"])
+        crit_hazards = len(res_df[res_df["Status"].str.contains("Hazard", na=False)])
+
+        st.markdown("---")
+        st.markdown("#### 📈 Benchmark Audit Performance Metrics")
+        kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
+        kpi1.metric("Total Evaluated", total)
+        kpi2.metric("Clean Reliability", f"{clean_pct}%", delta="Reliable", delta_color="normal")
+        kpi3.metric("Valency Physics Errors", phys_violations, delta="Caught", delta_color="inverse")
+        kpi4.metric("Fabricated Entities", fab_entities, delta="Caught", delta_color="inverse")
+        kpi5.metric("Lab Hazards Flagged", crit_hazards, delta="Intercepted", delta_color="inverse")
+
+        # Visual Breakdown Chart
+        st.markdown("#### 📊 Failure Mode & Verification Distribution")
+        status_counts = res_df["Status"].value_counts()
+        st.bar_chart(status_counts)
+
+        # Interactive Table
+        st.markdown("#### 📋 Detailed Batch Audit Log")
+        st.dataframe(
+            res_df[["ID", "Scientific Claim / Reaction", "Formula", "Trust Score", "Status", "PubChem CID"]],
+            use_container_width=True,
+            hide_index=True
+        )
+
+        # Export CSV
+        csv_buffer = io.StringIO()
+        res_df.to_csv(csv_buffer, index=False)
+        st.download_button(
+            label="📥 Download Full Audited Benchmark Report (CSV)",
+            data=csv_buffer.getvalue(),
+            file_name="sciguard_batch_audit_results.csv",
+            mime="text/csv"
+        )
+
+# ----------------- TAB 3: BENCHMARK -----------------
 with tab_benchmark:
     st.markdown("### 📊 SciGuard Scientific Hallucination Benchmark")
     st.markdown("Evaluated across 10 challenging test cases contrasting raw generative AI claims against SciGuard verification:")

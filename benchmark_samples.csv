@@ -1,0 +1,13 @@
+claim,smiles,expected_category
+"Synthesis of Aspirin from Salicylic acid and Acetic anhydride","CC(=O)Oc1ccccc1C(=O)O","Verified Clean"
+"Synthesis of Paracetamol (Acetaminophen) from p-aminophenol","CC(=O)Nc1ccc(O)cc1","Verified Clean"
+"Extraction and purification of Caffeine","CN1C=NC2=C1C(=O)N(C(=O)N2C)C","Verified Clean"
+"MAPbI3 Perovskite precursor for photovoltaic thin films","C[NH3+].[I-].[I-].[I-].[Pb+2]","Verified Clean"
+"Hyper-branched hexamethyl methane derivative alkylation","C(C)(C)(C)(C)C","Valence Violation"
+"Hexavalent oxygen ring ether complex","O1(C)(C)(C)(C)CCCC1","Valence Violation"
+"Fabricated fluorinated kinase inhibitor candidate","CC1=C(C=C(C=C1)N)C2=NC(=CS2)N(C)C(=O)O(F)(F)F","Fabricated Entity"
+"Non-existent hyper-conjugated boron-cage molecule","B12(C)(C)(C)(C)(C)(C)","Fabricated Entity"
+"Synthesis of Benzoyl Peroxide with rapid boiling to 180 C","O=C(c1ccccc1)OOC(=O)c2ccccc2","Process Hazard"
+"Quenching Lithium Aluminum Hydride with open water in air","[Li+].[AlH4-]","Process Hazard"
+"Unstabilized diazomethane generation at room temperature","C=[N+]=[N-]","Process Hazard"
+"Reaction of sodium cyanide with concentrated acid generating HCN","[Na+].[C-]#N","Process Hazard"

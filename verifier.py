@@ -278,3 +278,52 @@ class SciVerifier:
             "badge_color": badge_color,
             "breakdown": breakdown
         }
+
+    def audit_batch(self, items: List[Dict[str, str]]) -> List[Dict[str, Any]]:
+        """
+        Processes a batch of chemical claims or SMILES and returns structured audit results.
+        """
+        results = []
+        for i, item in enumerate(items):
+            query = item.get("claim") or item.get("query") or item.get("name") or f"Sample #{i+1}"
+            smiles = item.get("smiles") or item.get("SMILES") or ""
+            
+            # 1. Structure check
+            rdkit_res = self.validate_smiles(smiles)
+            
+            # 2. PubChem check
+            pubchem_res = self.ground_with_pubchem(
+                identifier=rdkit_res.get("canonical_smiles") or smiles or query,
+                by="auto"
+            )
+            
+            # 3. Safety check
+            safety_res = self.audit_reaction_safety(query, [smiles, pubchem_res.get("iupac_name") or ""])
+            
+            # 4. Trust score
+            trust = self.compute_trust_index(rdkit_res, pubchem_res, safety_res)
+            
+            # Flag primary failure mode
+            if not rdkit_res.get("valid"):
+                failure_mode = "Valency / Physics Violation"
+            elif pubchem_res.get("hallucination_flag"):
+                failure_mode = "Fabricated Compound (Not in PubChem)"
+            elif safety_res.get("risk_level") == "CRITICAL":
+                failure_mode = "Severe Process / Explosive Hazard"
+            elif safety_res.get("risk_level") == "ELEVATED":
+                failure_mode = "Elevated Hazard (Precaution Required)"
+            else:
+                failure_mode = "Verified Clean"
+
+            results.append({
+                "ID": i + 1,
+                "Scientific Claim / Reaction": query,
+                "SMILES": smiles,
+                "Formula": rdkit_res.get("formula") or pubchem_res.get("molecular_formula") or "N/A",
+                "Trust Score": trust["total_score"],
+                "Verdict": trust["verdict"],
+                "Status": failure_mode,
+                "PubChem CID": pubchem_res.get("cid") or "None"
+            })
+        return results
+
