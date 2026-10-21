@@ -87,7 +87,7 @@ Large Language Models (LLMs) like GPT-4, Gemini, and Claude are transforming sci
 
 ### 1. Clone & Install Dependencies
 ```bash
-git clone https://github.com/your-username/SciGuard.git
+git clone https://github.com/prembhagat01/SciGuard.git
 cd SciGuard
 
 pip install streamlit rdkit requests google-genai py3Dmol
